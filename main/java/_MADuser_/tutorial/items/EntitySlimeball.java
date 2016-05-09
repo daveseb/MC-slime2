@@ -1,5 +1,6 @@
 package _MADuser_.tutorial.items;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.entity.EntityLiving;
@@ -8,6 +9,7 @@ import net.minecraft.entity.monster.EntityBlaze;
 import net.minecraft.entity.monster.EntitySlime;
 import net.minecraft.entity.passive.EntityCow;
 import net.minecraft.entity.projectile.EntityThrowable;
+import net.minecraft.item.Item;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.potion.PotionType;
@@ -34,8 +36,8 @@ public class EntitySlimeball extends EntityThrowable
     {
         super(worldIn, x, y, z);
     }
-
-    /**
+    
+     /**
      * Called when this EntityThrowable hits a block or entity.
      */
     protected void onImpact(RayTraceResult result)
@@ -43,7 +45,7 @@ public class EntitySlimeball extends EntityThrowable
         if (result.entityHit != null)
         {
             int i = 0;
-            if (result.entityHit instanceof EntitySlime)
+            if (result.entityHit instanceof EntityCow)
             {
                 i = 0;
             }
@@ -60,7 +62,7 @@ public class EntitySlimeball extends EntityThrowable
             this.worldObj.spawnParticle(EnumParticleTypes.EXPLOSION_HUGE, this.posX, this.posY, this.posZ, 0.0D, 0.0D, 0.0D, new int[0]);
         }
 */      //  this.worldObj.createExplosion(this,this.posX, this.posY, this.posZ, 5.0F, true);
-		setSlowness(result);
+		applyPotions(result);
 		
         if (!this.worldObj.isRemote)
         {
@@ -68,8 +70,24 @@ public class EntitySlimeball extends EntityThrowable
         }
     }
     
-    private void setSlowness(RayTraceResult result){
-        AxisAlignedBB axisalignedbb = this.getEntityBoundingBox(); //.expand(4.0D, 2.0D, 4.0D);
+    private void applyPotions(RayTraceResult result){
+    	
+    	List<PotionEffect> listEffects = new ArrayList<PotionEffect>();
+    	
+    	//2 is slowness potion
+        Potion potion = Potion.getPotionById(2);
+        PotionEffect potioneffect = new PotionEffect(potion,600,0);  //600 ticks is 30 seconds
+    	listEffects.add(potioneffect);
+
+        if (result.entityHit instanceof EntityCow)
+        {
+        	//6 is instant health potion
+        	potion = Potion.getPotionById(6);
+            potioneffect = new PotionEffect(potion,600,0);  //600 ticks is 30 seconds
+        	listEffects.add(potioneffect);
+        }
+    	
+        AxisAlignedBB axisalignedbb = this.getEntityBoundingBox().expand(1.0D, 1.0D, 1.0D);
         List<EntityLivingBase> list1 = this.worldObj.<EntityLivingBase>getEntitiesWithinAABB(EntityLivingBase.class, axisalignedbb);
 
         if (!list1.isEmpty())
@@ -86,15 +104,13 @@ public class EntitySlimeball extends EntityThrowable
 
                         if (entitylivingbase == result.entityHit)
                         {
-                            d1 = 1.0D;
+                            d1 = 10.0D;
                         }
 
-                        //for (PotionEffect potioneffect1 : list)
-                        //{
-                        	//2 is slowness potion
-                            Potion potion = Potion.getPotionById(2); //potioneffect1.getPotion();
-                            PotionEffect potioneffect1 = new PotionEffect(potion,600,0);  //600 ticks is 30 seconds
-                            
+                        for (PotionEffect potioneffect1 : listEffects)
+                        {
+                            potion = potioneffect1.getPotion();
+                           
                             if (potion.isInstant())
                             {
                                 potion.affectEntity(this, this.getThrower(), entitylivingbase, potioneffect1.getAmplifier(), d1);
@@ -108,7 +124,7 @@ public class EntitySlimeball extends EntityThrowable
                                     entitylivingbase.addPotionEffect(new PotionEffect(potion, i, potioneffect1.getAmplifier()));
                                 }
                             }
-                        //}
+                        }
                     }
                 }
             }
